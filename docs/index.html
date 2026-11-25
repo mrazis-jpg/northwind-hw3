@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northwind Sales Review</title>
+<style>
+:root { --bg:#fbfbf9; --fg:#1d1d1b; --muted:#66655f; --line:#e2e0d8; --accent:#2f5d8a; --stripe:#f3f2ed; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#17181a; --fg:#e8e6e1; --muted:#a09d95; --line:#33343a; --accent:#8db4dc; --stripe:#1f2023; }
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--fg);
+       font:16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 920px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 1.8rem; margin: 0 0 4px; }
+h2 { font-size: 1.35rem; margin: 48px 0 8px; padding-top: 16px; border-top: 1px solid var(--line); }
+h3 { font-size: 1rem; margin: 24px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.sub, .note { color: var(--muted); }
+.note { font-size: .9rem; }
+.answer { font-size: 1.05rem; border-left: 3px solid var(--accent); padding-left: 12px; }
+nav a { color: var(--accent); margin-right: 16px; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+th { font-weight: 600; border-bottom: 2px solid var(--line); }
+tbody tr:nth-child(even) { background: var(--stripe); }
+.num { text-align: right; }
+figure { margin: 16px 0 8px; }
+figure img { display: block; width: 100%; height: auto; }
+figcaption { font-size: .85rem; color: var(--muted); margin-top: 6px; }
+footer { margin-top: 48px; font-size: .85rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Northwind Sales Review</h1>
+  <p class="sub">830 orders (2,155 order lines) placed between
+  1996-07-04 and 1998-05-06, totalling $1,265,793
+  in net revenue.</p>
+  <nav><a href="#growth">Growth</a><a href="#products">Products</a><a href="#customers">Customers</a></nav>
+  
+<section id="growth">
+  <h2>1. Is the business growing?</h2>
+  <p class="answer">For Aug–Dec 1997 vs 1996, revenue grew 57.9% ($180,222 → $284,598). For Jan–Apr 1998 vs 1997, revenue grew 120.7% ($191,322 → $422,290). The best complete month was
+  April 1998 at $123,799.</p>
+  <p class="note">Comparisons use only months that are complete in both years.
+  Jul 1996 and May 1998 are only partly covered by the data, so they are marked
+  “partial” and left out of growth figures.</p>
+  <figure><picture><source srcset="figures/monthly_revenue_dark.png" media="(prefers-color-scheme: dark)"><img src="figures/monthly_revenue.png" alt="Line chart of net revenue by month from Jul 1996 to May 1998; partial months are drawn as hollow points." loading="lazy"></picture><figcaption>Hollow points with dashed links are partial months. Exact values are in the month-by-month table below.</figcaption></figure>
+  <h3>Same months, year over year</h3>
+  <div class="table-wrap"><table><thead><tr><th class="">Comparison</th><th class="num">Orders (prior)</th><th class="num">Orders (current)</th><th class="num">Revenue (prior)</th><th class="num">Revenue (current)</th><th class="num">Revenue growth</th></tr></thead><tbody><tr><td class="">Aug–Dec 1997 vs 1996</td><td class="num">130</td><td class="num">190</td><td class="num">$180,222</td><td class="num">$284,598</td><td class="num">+57.9%</td></tr><tr><td class="">Jan–Apr 1998 vs 1997</td><td class="num">123</td><td class="num">256</td><td class="num">$191,322</td><td class="num">$422,290</td><td class="num">+120.7%</td></tr></tbody></table></div>
+  <h3>Month by month</h3>
+  <div class="table-wrap"><table><thead><tr><th class="">Month</th><th class="num">Orders</th><th class="num">Revenue</th><th class="num">Avg order value</th><th class="num">Change vs prior month</th></tr></thead><tbody><tr><td class="">Jul 1996 (partial)</td><td class="num">22</td><td class="num">$27,862</td><td class="num">$1,266</td><td class="num">—</td></tr><tr><td class="">Aug 1996</td><td class="num">25</td><td class="num">$25,485</td><td class="num">$1,019</td><td class="num">—</td></tr><tr><td class="">Sep 1996</td><td class="num">23</td><td class="num">$26,381</td><td class="num">$1,147</td><td class="num">+3.5%</td></tr><tr><td class="">Oct 1996</td><td class="num">26</td><td class="num">$37,516</td><td class="num">$1,443</td><td class="num">+42.2%</td></tr><tr><td class="">Nov 1996</td><td class="num">25</td><td class="num">$45,600</td><td class="num">$1,824</td><td class="num">+21.5%</td></tr><tr><td class="">Dec 1996</td><td class="num">31</td><td class="num">$45,240</td><td class="num">$1,459</td><td class="num">-0.8%</td></tr><tr><td class="">Jan 1997</td><td class="num">33</td><td class="num">$61,258</td><td class="num">$1,856</td><td class="num">+35.4%</td></tr><tr><td class="">Feb 1997</td><td class="num">29</td><td class="num">$38,484</td><td class="num">$1,327</td><td class="num">-37.2%</td></tr><tr><td class="">Mar 1997</td><td class="num">30</td><td class="num">$38,547</td><td class="num">$1,285</td><td class="num">+0.2%</td></tr><tr><td class="">Apr 1997</td><td class="num">31</td><td class="num">$53,033</td><td class="num">$1,711</td><td class="num">+37.6%</td></tr><tr><td class="">May 1997</td><td class="num">32</td><td class="num">$53,781</td><td class="num">$1,681</td><td class="num">+1.4%</td></tr><tr><td class="">Jun 1997</td><td class="num">30</td><td class="num">$36,363</td><td class="num">$1,212</td><td class="num">-32.4%</td></tr><tr><td class="">Jul 1997</td><td class="num">33</td><td class="num">$51,021</td><td class="num">$1,546</td><td class="num">+40.3%</td></tr><tr><td class="">Aug 1997</td><td class="num">33</td><td class="num">$47,288</td><td class="num">$1,433</td><td class="num">-7.3%</td></tr><tr><td class="">Sep 1997</td><td class="num">37</td><td class="num">$55,629</td><td class="num">$1,503</td><td class="num">+17.6%</td></tr><tr><td class="">Oct 1997</td><td class="num">38</td><td class="num">$66,749</td><td class="num">$1,757</td><td class="num">+20.0%</td></tr><tr><td class="">Nov 1997</td><td class="num">34</td><td class="num">$43,534</td><td class="num">$1,280</td><td class="num">-34.8%</td></tr><tr><td class="">Dec 1997</td><td class="num">48</td><td class="num">$71,398</td><td class="num">$1,487</td><td class="num">+64.0%</td></tr><tr><td class="">Jan 1998</td><td class="num">55</td><td class="num">$94,222</td><td class="num">$1,713</td><td class="num">+32.0%</td></tr><tr><td class="">Feb 1998</td><td class="num">54</td><td class="num">$99,415</td><td class="num">$1,841</td><td class="num">+5.5%</td></tr><tr><td class="">Mar 1998</td><td class="num">73</td><td class="num">$104,854</td><td class="num">$1,436</td><td class="num">+5.5%</td></tr><tr><td class="">Apr 1998</td><td class="num">74</td><td class="num">$123,799</td><td class="num">$1,673</td><td class="num">+18.1%</td></tr><tr><td class="">May 1998 (partial)</td><td class="num">14</td><td class="num">$18,334</td><td class="num">$1,310</td><td class="num">—</td></tr></tbody></table></div>
+</section>
+  
+<section id="products">
+  <h2>2. Which products and categories bring in the money?</h2>
+  <p class="answer">Beverages is the largest category with
+  21.2% of revenue; the top two categories together make up 39.7%.
+  The top 10 products alone account for 44.2% of all revenue. 3 of the top 10 are marked discontinued (Thüringer Rostbratwurst, Alice Mutton, Rössle Sauerkraut), so that revenue will need replacing.</p>
+  <h3>Revenue by category</h3>
+  <div class="table-wrap"><table><thead><tr><th class="">Category</th><th class="num">Products</th><th class="num">Units sold</th><th class="num">Revenue</th><th class="num">Share</th></tr></thead><tbody><tr><td class="">Beverages</td><td class="num">12</td><td class="num">9,532</td><td class="num">$267,868</td><td class="num">21.2%</td></tr><tr><td class="">Dairy Products</td><td class="num">10</td><td class="num">9,149</td><td class="num">$234,507</td><td class="num">18.5%</td></tr><tr><td class="">Confections</td><td class="num">13</td><td class="num">7,906</td><td class="num">$167,357</td><td class="num">13.2%</td></tr><tr><td class="">Meat/Poultry</td><td class="num">6</td><td class="num">4,199</td><td class="num">$163,022</td><td class="num">12.9%</td></tr><tr><td class="">Seafood</td><td class="num">12</td><td class="num">7,681</td><td class="num">$131,262</td><td class="num">10.4%</td></tr><tr><td class="">Condiments</td><td class="num">12</td><td class="num">5,298</td><td class="num">$106,047</td><td class="num">8.4%</td></tr><tr><td class="">Produce</td><td class="num">5</td><td class="num">2,990</td><td class="num">$99,985</td><td class="num">7.9%</td></tr><tr><td class="">Grains/Cereals</td><td class="num">7</td><td class="num">4,562</td><td class="num">$95,745</td><td class="num">7.6%</td></tr></tbody></table></div>
+  <h3>Top 10 products</h3>
+  <div class="table-wrap"><table><thead><tr><th class="num">Rank</th><th class="">Product</th><th class="">Category</th><th class="num">Units sold</th><th class="num">Revenue</th><th class="num">Share</th><th class="num">Cumulative share</th><th class="">Discontinued</th></tr></thead><tbody><tr><td class="num">1</td><td class="">Côte de Blaye</td><td class="">Beverages</td><td class="num">623</td><td class="num">$141,397</td><td class="num">11.2%</td><td class="num">11.2%</td><td class=""></td></tr><tr><td class="num">2</td><td class="">Thüringer Rostbratwurst</td><td class="">Meat/Poultry</td><td class="num">746</td><td class="num">$80,369</td><td class="num">6.3%</td><td class="num">17.5%</td><td class="">Yes</td></tr><tr><td class="num">3</td><td class="">Raclette Courdavault</td><td class="">Dairy Products</td><td class="num">1,496</td><td class="num">$71,156</td><td class="num">5.6%</td><td class="num">23.1%</td><td class=""></td></tr><tr><td class="num">4</td><td class="">Tarte au sucre</td><td class="">Confections</td><td class="num">1,083</td><td class="num">$47,235</td><td class="num">3.7%</td><td class="num">26.9%</td><td class=""></td></tr><tr><td class="num">5</td><td class="">Camembert Pierrot</td><td class="">Dairy Products</td><td class="num">1,577</td><td class="num">$46,825</td><td class="num">3.7%</td><td class="num">30.6%</td><td class=""></td></tr><tr><td class="num">6</td><td class="">Gnocchi di nonna Alice</td><td class="">Grains/Cereals</td><td class="num">1,263</td><td class="num">$42,593</td><td class="num">3.4%</td><td class="num">33.9%</td><td class=""></td></tr><tr><td class="num">7</td><td class="">Manjimup Dried Apples</td><td class="">Produce</td><td class="num">886</td><td class="num">$41,820</td><td class="num">3.3%</td><td class="num">37.2%</td><td class=""></td></tr><tr><td class="num">8</td><td class="">Alice Mutton</td><td class="">Meat/Poultry</td><td class="num">978</td><td class="num">$32,698</td><td class="num">2.6%</td><td class="num">39.8%</td><td class="">Yes</td></tr><tr><td class="num">9</td><td class="">Carnarvon Tigers</td><td class="">Seafood</td><td class="num">539</td><td class="num">$29,172</td><td class="num">2.3%</td><td class="num">42.1%</td><td class=""></td></tr><tr><td class="num">10</td><td class="">Rössle Sauerkraut</td><td class="">Produce</td><td class="num">640</td><td class="num">$25,697</td><td class="num">2.0%</td><td class="num">44.2%</td><td class="">Yes</td></tr></tbody></table></div>
+</section>
+  
+<section id="customers">
+  <h2>3. How dependent are we on a few customers?</h2>
+  <p class="answer">The top 10 customers bring in 45.0% of revenue, and just
+  34 of 89 ordering customers make up 80%.
+  The largest, QUICK-Stop (Germany), alone accounts for
+  8.7%.</p>
+  <figure><picture><source srcset="figures/customer_pareto_dark.png" media="(prefers-color-scheme: dark)"><img src="figures/customer_pareto.png" alt="Pareto chart: bars show revenue for each of 89 customers ranked from largest to smallest; a line below shows cumulative share, reaching 80% at customer 34." loading="lazy"></picture><figcaption>Top panel: revenue per customer, largest first. Bottom panel: running share of total revenue.</figcaption></figure>
+  <h3>Concentration summary</h3>
+  <div class="table-wrap"><table><thead><tr><th class="">Measure</th><th class="num">Value</th></tr></thead><tbody><tr><td class="">Top customer: share of revenue</td><td class="num">8.7%</td></tr><tr><td class="">Top 5 customers: share of revenue</td><td class="num">33.2%</td></tr><tr><td class="">Top 10 customers: share of revenue</td><td class="num">45.0%</td></tr><tr><td class="">Top 20% of customers (18): share of revenue</td><td class="num">60.1%</td></tr><tr><td class="">Customers needed to reach 50% of revenue</td><td class="num">13</td></tr><tr><td class="">Customers needed to reach 80% of revenue</td><td class="num">34</td></tr><tr><td class="">Customers with at least one order</td><td class="num">89</td></tr><tr><td class="">Customers with no orders</td><td class="num">2</td></tr></tbody></table></div>
+  <h3>Top 10 customers</h3>
+  <div class="table-wrap"><table><thead><tr><th class="num">Rank</th><th class="">Customer</th><th class="">Country</th><th class="num">Orders</th><th class="num">Revenue</th><th class="num">Share</th><th class="num">Cumulative share</th><th class="">Last order</th></tr></thead><tbody><tr><td class="num">1</td><td class="">QUICK-Stop</td><td class="">Germany</td><td class="num">28</td><td class="num">$110,277</td><td class="num">8.7%</td><td class="num">8.7%</td><td class="">1998-04-14</td></tr><tr><td class="num">2</td><td class="">Ernst Handel</td><td class="">Austria</td><td class="num">30</td><td class="num">$104,875</td><td class="num">8.3%</td><td class="num">17.0%</td><td class="">1998-05-05</td></tr><tr><td class="num">3</td><td class="">Save-a-lot Markets</td><td class="">USA</td><td class="num">31</td><td class="num">$104,362</td><td class="num">8.2%</td><td class="num">25.2%</td><td class="">1998-05-01</td></tr><tr><td class="num">4</td><td class="">Rattlesnake Canyon Grocery</td><td class="">USA</td><td class="num">18</td><td class="num">$51,098</td><td class="num">4.0%</td><td class="num">29.3%</td><td class="">1998-05-06</td></tr><tr><td class="num">5</td><td class="">Hungry Owl All-Night Grocers</td><td class="">Ireland</td><td class="num">19</td><td class="num">$49,980</td><td class="num">3.9%</td><td class="num">33.2%</td><td class="">1998-04-30</td></tr><tr><td class="num">6</td><td class="">Hanari Carnes</td><td class="">Brazil</td><td class="num">14</td><td class="num">$32,841</td><td class="num">2.6%</td><td class="num">35.8%</td><td class="">1998-04-27</td></tr><tr><td class="num">7</td><td class="">Königlich Essen</td><td class="">Germany</td><td class="num">14</td><td class="num">$30,908</td><td class="num">2.4%</td><td class="num">38.3%</td><td class="">1998-04-16</td></tr><tr><td class="num">8</td><td class="">Folk och fä HB</td><td class="">Sweden</td><td class="num">19</td><td class="num">$29,568</td><td class="num">2.3%</td><td class="num">40.6%</td><td class="">1998-04-27</td></tr><tr><td class="num">9</td><td class="">Mère Paillarde</td><td class="">Canada</td><td class="num">13</td><td class="num">$28,872</td><td class="num">2.3%</td><td class="num">42.9%</td><td class="">1997-10-30</td></tr><tr><td class="num">10</td><td class="">White Clover Markets</td><td class="">USA</td><td class="num">14</td><td class="num">$27,364</td><td class="num">2.2%</td><td class="num">45.0%</td><td class="">1998-05-01</td></tr></tbody></table></div>
+  <p class="note">Data caveat: 4 orders (10248, 10249, 10260, 10808) ship to a different company and country than the customer recorded on them, so their customer ID may be wrong. They are counted under the recorded customer; together they are $5,219 (0.4% of revenue), too little to change the picture.</p>
+</section>
+  <footer>
+    <p>Revenue = unit price on the order line × quantity × (1 − discount), using the price actually
+    charged rather than today's list price. Orders are dated by order date; 21
+    orders had not shipped yet and are included.</p>
+    <p>Generated by <code>scripts/build_site.py</code> from <code>data/Northwind_Database.xlsx</code>.
+    Data through 1998-05-06.</p>
+  </footer>
+</main>
+</body>
+</html>

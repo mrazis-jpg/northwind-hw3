@@ -1,0 +1,12 @@
+# Local virtual environment
+.venv/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# macOS Finder metadata
+.DS_Store
+
+# Personal Claude Code settings (keep .claude/skills/ tracked)
+.claude/settings.local.json
