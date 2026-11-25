@@ -11,6 +11,7 @@ import analysis
 import charts
 
 OUT_PATH = analysis.REPO_ROOT / "docs" / "index.html"
+REPO_URL = "https://github.com/mrazis-jpg/northwind-hw3"
 
 
 def figure(name, alt, caption):
@@ -114,20 +115,60 @@ def table(df, formats, numeric=(), caption=None):
 
 # ---------------------------------------------------------------- sections
 
-def section_growth(monthly, yoy):
+def join_and(items):
+    """Join words as an English list, e.g. "A, B and C".
+
+    Args:
+        items (Iterable[str]): Words to join, in order.
+
+    Returns:
+        str: The joined list; a single item is returned unchanged.
+    """
+    items = list(items)
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def part(label, body):
+    """Wrap one labelled part of a question section.
+
+    Args:
+        label (str): Part heading, e.g. ``"Why it matters"``.
+        body (str): HTML content of the part.
+
+    Returns:
+        str: HTML ``<div>`` with the heading and content.
+    """
+    return f'<div class="part"><h3>{html.escape(label)}</h3>{body}</div>'
+
+
+def bullets(items):
+    """Render a list of HTML strings as a numbered list.
+
+    Args:
+        items (list[str]): List items, already HTML-escaped.
+
+    Returns:
+        str: HTML ``<ol>`` element.
+    """
+    return "<ol>" + "".join(f"<li>{i}</li>" for i in items) + "</ol>"
+
+
+def section_growth(monthly, yoy, cov):
     """Build the HTML section for question 1 (growth).
 
     Args:
         monthly (pandas.DataFrame): Output of
             ``analysis.monthly_trend``.
         yoy (pandas.DataFrame): Output of ``analysis.year_over_year``.
+        cov (dict[str, Any]): Output of ``analysis.data_coverage``.
 
     Returns:
-        str: HTML ``<section>`` with summary, chart and two tables.
+        str: HTML ``<section>`` with the five labelled parts.
     """
     full = monthly[~monthly["Partial"]]
     best = full["Revenue"].idxmax()
     partial_months = [m.strftime("%b %Y") for m in monthly.index[monthly["Partial"]]]
+    mom = monthly["MoMChange"].dropna()
 
     yoy_sentences = []
     for _, r in yoy.iterrows():
@@ -136,6 +177,16 @@ def section_growth(monthly, yoy):
             f"For {html.escape(r['Months'])}, revenue {verb} {pct(abs(r['Growth']))} "
             f"({money(r['PriorRevenue'])} → {money(r['CurrentRevenue'])})."
         )
+
+    # Split the latest year-over-year change into more orders vs bigger orders.
+    latest = yoy.iloc[-1]
+    order_growth = latest["CurrentOrders"] / latest["PriorOrders"] - 1
+    aov_prior = latest["PriorRevenue"] / latest["PriorOrders"]
+    aov_current = latest["CurrentRevenue"] / latest["CurrentOrders"]
+    aov_growth = aov_current / aov_prior - 1
+    run_rate = latest["CurrentRevenue"] / latest["MonthCount"]
+    prior_rate = latest["PriorRevenue"] / latest["MonthCount"]
+    driver = "the number of orders" if order_growth >= aov_growth else "the size of each order"
 
     yoy_view = yoy.rename(columns={
         "Months": "Comparison", "PriorOrders": "Orders (prior)", "CurrentOrders": "Orders (current)",
@@ -149,29 +200,68 @@ def section_growth(monthly, yoy):
     month_view = month_view.rename(columns={"AvgOrderValue": "Avg order value", "MoMChange": "Change vs prior month"})
     month_view = month_view[["Month", "Orders", "Revenue", "Avg order value", "Change vs prior month"]]
 
-    return f"""
-<section id="growth">
-  <h2>1. Is the business growing?</h2>
-  <p class="answer">{' '.join(yoy_sentences)} The best complete month was
-  {best.strftime('%B %Y')} at {money(full.loc[best, 'Revenue'])}.</p>
-  <p class="note">Comparisons use only months that are complete in both years.
-  {' and '.join(partial_months)} are only partly covered by the data, so they are marked
-  “partial” and left out of growth figures.</p>
+    why = ("<p>Growth sets how much stock to buy, how many people to staff and what to commit to "
+           "suppliers. A manager needs to know whether recent sales are a lasting trend or a "
+           "temporary spike before planning around them.</p>")
+
+    approach = (
+        f"<p>Net revenue for each order line is added up by the month the order was placed, "
+        f"giving {len(monthly)} months. Growth compares the same complete months in consecutive "
+        f"years, so seasonal patterns cancel out; {' and '.join(partial_months)} are only partly "
+        f"covered by the data, so they are marked “partial” and left out. Order counts and average "
+        f"order value show whether growth comes from more orders or bigger ones.</p>"
+    )
+
+    evidence = f"""
   {figure("monthly_revenue",
           f"Line chart of net revenue by month from {monthly.index[0].strftime('%b %Y')} to "
           f"{monthly.index[-1].strftime('%b %Y')}; partial months are drawn as hollow points.",
           "Hollow points with dashed links are partial months. Exact values are in the month-by-month table below.")}
-  <h3>Same months, year over year</h3>
+  <h4>Same months, year over year</h4>
   {table(yoy_view, {
       "Orders (prior)": integer, "Orders (current)": integer,
       "Revenue (prior)": money, "Revenue (current)": money,
       "Revenue growth": lambda x: pct(x, signed=True)},
       numeric=yoy_view.columns[1:])}
-  <h3>Month by month</h3>
+  <h4>Month by month</h4>
   {table(month_view, {
       "Orders": integer, "Revenue": money, "Avg order value": money,
       "Change vs prior month": lambda x: pct(x, signed=True)},
-      numeric=month_view.columns[1:])}
+      numeric=month_view.columns[1:])}"""
+
+    finding = (
+        f'<p class="answer">{" ".join(yoy_sentences)} Over {html.escape(latest["Months"])}, the number '
+        f"of orders changed by {pct(order_growth, signed=True)} ({integer(latest['PriorOrders'])} → "
+        f"{integer(latest['CurrentOrders'])}) and average order value by {pct(aov_growth, signed=True)} "
+        f"({money(aov_prior)} → {money(aov_current)}), so most of the change comes from {driver}. "
+        f"The best complete month was {best.strftime('%B %Y')} at "
+        f"{money(full.loc[best, 'Revenue'])}.</p>"
+    )
+
+    actions = [
+        f"<strong>Plan to the current run rate, not last year’s.</strong> In the latest comparison "
+        f"({html.escape(latest['Months'])}), revenue averaged {money(run_rate)} a month against "
+        f"{money(prior_rate)} a year earlier. Base purchasing, "
+        f"supplier commitments and staffing on the current level.",
+        f"<strong>Add capacity where the growth is.</strong> Because growth comes mainly from {driver}, "
+        + ("add order-handling and shipping capacity rather than relying on bigger orders."
+           if driver == "the number of orders" else
+           "protect the large-order customers and products driving it.")
+        + (f" {cov['n_unshipped']} orders placed since {day(cov['oldest_unshipped'])} have not shipped yet; "
+           f"check that fulfilment is keeping up." if cov["n_unshipped"] else ""),
+        f"<strong>Judge each month against the same month last year.</strong> Month-to-month changes "
+        f"ranged from {pct(mom.min(), signed=True)} to {pct(mom.max(), signed=True)}, so a single "
+        f"weak month is not a reason to react.",
+    ]
+
+    return f"""
+<section id="growth">
+  <h2>1. Is the business growing?</h2>
+  {part("Why it matters", why)}
+  {part("Approach", approach)}
+  {part("Chart and tables", evidence)}
+  {part("Main finding", finding)}
+  {part("Business implication", bullets(actions))}
 </section>"""
 
 
@@ -184,40 +274,91 @@ def section_products(cats, prods):
         prods (pandas.DataFrame): Output of ``analysis.top_products``.
 
     Returns:
-        str: HTML ``<section>`` with summary and two tables.
+        str: HTML ``<section>`` with the five labelled parts.
     """
     top_cat = cats.iloc[0]
     top_two_share = cats["Share"].head(2).sum()
+    bottom_two = cats.tail(2)
     n_top = len(prods)
     top_share = prods["CumulativeShare"].iloc[-1]
-    n_disc = int(prods["Discontinued"].sum())
-    disc_names = ", ".join(prods.loc[prods["Discontinued"], "Product"])
-    disc_text = (
-        f" {n_disc} of the top {n_top} {'is' if n_disc == 1 else 'are'} marked discontinued "
-        f"({html.escape(disc_names)}), so that revenue will need replacing."
-        if n_disc else ""
-    )
+    leader = prods.iloc[0]
+    disc = prods[prods["Discontinued"]]
+    gaps = prods["Revenue"].diff(-1).iloc[:-1]
+    close_i = int(gaps.idxmin())
+
     prods_view = prods.assign(Discontinued=prods["Discontinued"].map({True: "Yes", False: ""}))
     prods_view = prods_view.rename(columns={"UnitsSold": "Units sold", "CumulativeShare": "Cumulative share"})
     cats_view = cats.rename(columns={"UnitsSold": "Units sold"})
 
+    why = ("<p>Knowing which products and categories earn the revenue tells a manager where to focus "
+           "stock, promotions and supplier negotiations, and which losses would hurt most.</p>")
+
+    approach = (
+        f"<p>Net revenue is added up for each of the {len(cats)} categories and for each product, "
+        f"then ranked, with each one’s share of total revenue and the running (cumulative) share. "
+        f"Products marked discontinued in the product list are flagged.</p>"
+        f"<p>The rankings are shown as tables rather than a chart because the point is exact order "
+        f"and share: a table puts rank, revenue, share, cumulative share and discontinued status side "
+        f"by side, while bars of similar length are hard to tell apart. For example, "
+        f"{html.escape(prods['Product'].iloc[close_i])} and "
+        f"{html.escape(prods['Product'].iloc[close_i + 1])} (ranks {close_i + 1} and {close_i + 2}) "
+        f"differ by only {money(gaps.iloc[close_i])}.</p>"
+    )
+
+    evidence = f"""
+  <h4>Revenue by category</h4>
+  {table(cats_view, {"Products": integer, "Units sold": integer, "Revenue": money, "Share": pct},
+         numeric=["Products", "Units sold", "Revenue", "Share"])}
+  <h4>Top {n_top} products</h4>
+  {table(prods_view, {"Rank": integer, "Units sold": integer, "Revenue": money,
+                      "Share": pct, "Cumulative share": pct},
+         numeric=["Rank", "Units sold", "Revenue", "Share", "Cumulative share"])}"""
+
+    disc_text = (
+        f" {len(disc)} of the top {n_top} {'is' if len(disc) == 1 else 'are'} marked discontinued: "
+        f"{html.escape(join_and(disc['Product']))}." if len(disc) else ""
+    )
+    finding = (
+        f'<p class="answer">{html.escape(top_cat["Category"])} is the largest category with '
+        f"{pct(top_cat['Share'])} of revenue; the top two categories together make up "
+        f"{pct(top_two_share)}. The top {n_top} products alone account for {pct(top_share)} of all "
+        f"revenue, and {html.escape(leader['Product'])} by itself brings in {pct(leader['Share'])}."
+        f"{disc_text}</p>"
+    )
+
+    actions = [
+        f"<strong>Protect the best seller.</strong> Make sure {html.escape(leader['Product'])} "
+        f"({html.escape(leader['Category'])}, {money(leader['Revenue'])}) never runs out of stock, "
+        f"and secure its supply terms. It earns {leader['Revenue'] / prods['Revenue'].iloc[1]:.1f} times "
+        f"the revenue of the next product, {html.escape(prods['Product'].iloc[1])}.",
+    ]
+    if len(disc):
+        disc_cats = join_and(sorted(set(disc["Category"])))
+        actions.append(
+            f"<strong>Replace the discontinued top sellers now.</strong> {html.escape(join_and(disc['Product']))} "
+            f"brought in {money(disc['Revenue'].sum())} ({pct(disc['Share'].sum())} of revenue). Find "
+            f"replacement products in {html.escape(disc_cats)} and move their customers over before "
+            f"remaining stock sells out."
+        )
+    actions.append(
+        f"<strong>Review the weakest categories.</strong> {html.escape(' and '.join(bottom_two['Category']))} "
+        f"together make up only {pct(bottom_two['Share'].sum())} of revenue. Decide whether to promote "
+        f"them or trim their range and free up stock and supplier effort for "
+        f"{html.escape(top_cat['Category'])}."
+    )
+
     return f"""
 <section id="products">
   <h2>2. Which products and categories bring in the money?</h2>
-  <p class="answer">{html.escape(top_cat['Category'])} is the largest category with
-  {pct(top_cat['Share'])} of revenue; the top two categories together make up {pct(top_two_share)}.
-  The top {n_top} products alone account for {pct(top_share)} of all revenue.{disc_text}</p>
-  <h3>Revenue by category</h3>
-  {table(cats_view, {"Products": integer, "Units sold": integer, "Revenue": money, "Share": pct},
-         numeric=["Products", "Units sold", "Revenue", "Share"])}
-  <h3>Top {n_top} products</h3>
-  {table(prods_view, {"Rank": integer, "Units sold": integer, "Revenue": money,
-                      "Share": pct, "Cumulative share": pct},
-         numeric=["Rank", "Units sold", "Revenue", "Share", "Cumulative share"])}
+  {part("Why it matters", why)}
+  {part("Approach", approach)}
+  {part("Tables", evidence)}
+  {part("Main finding", finding)}
+  {part("Business implication", bullets(actions))}
 </section>"""
 
 
-def section_customers(conc, stats, top_cust, suspect):
+def section_customers(conc, stats, top_cust, suspect, data_end, lapse_days=90):
     """Build the HTML section for question 3 (customer concentration).
 
     Args:
@@ -229,16 +370,23 @@ def section_customers(conc, stats, top_cust, suspect):
             ``analysis.customer_revenue``.
         suspect (dict[str, Any]): Output of
             ``analysis.suspect_customer_orders``.
+        data_end (pandas.Timestamp): Date of the last order in the data.
+        lapse_days (int): Days without an order before a top customer
+            is flagged as lapsing.
 
     Returns:
-        str: HTML ``<section>`` with summary, chart, two tables and an
-        optional data caveat.
+        str: HTML ``<section>`` with the five labelled parts.
     """
-    leader = top_cust.iloc[0]
+    top3 = top_cust.head(3)
+    top3_names = [html.escape(n) for n in top3["Customer"]]
+    top3_list = join_and(top3_names)
+    top3_share = top3["Share"].sum()
+    rest_of_top10 = top_cust.iloc[3:]
+    lapsing = top_cust[(data_end - top_cust["LastOrder"]).dt.days > lapse_days]
+
     conc_view = conc.copy()
     conc_view["Value"] = [pct(v) if k == "pct" else integer(v) for v, k in zip(conc["Value"], conc["Kind"])]
     conc_view = conc_view[["Measure", "Value"]]
-
     cust_view = top_cust.rename(columns={"CumulativeShare": "Cumulative share", "LastOrder": "Last order"})
 
     suspect_note = ""
@@ -252,25 +400,81 @@ def section_customers(conc, stats, top_cust, suspect):
             f"({pct(suspect['share'])} of revenue){impact}.</p>"
         )
 
-    return f"""
-<section id="customers">
-  <h2>3. How dependent are we on a few customers?</h2>
-  <p class="answer">The top 10 customers bring in {pct(stats['top_10_share'])} of revenue, and just
-  {stats['needed_for_80']} of {stats['n_customers_ordering']} ordering customers make up 80%.
-  The largest, {html.escape(leader['Customer'])} ({html.escape(leader['Country'])}), alone accounts for
-  {pct(leader['Share'])}.</p>
+    why = ("<p>When a few customers supply most of the revenue, losing one of them can wipe out a "
+           "year’s growth, and those customers gain leverage over prices and terms. A manager needs "
+           "to know how exposed the business is and to whom.</p>")
+
+    approach = (
+        f"<p>Net revenue is added up for each of the {stats['n_customers_ordering']} customers who "
+        f"ordered, then customers are ranked from largest to smallest. The running share shows how "
+        f"many customers it takes to reach 50% and 80% of revenue (a Pareto analysis). Each top "
+        f"customer’s last order date shows whether they are still active. Orders whose shipping "
+        f"details point to a different customer are checked and reported.</p>"
+    )
+
+    evidence = f"""
   {figure("customer_pareto",
           f"Pareto chart: bars show revenue for each of {stats['n_customers_ordering']} customers ranked "
           f"from largest to smallest; a line below shows cumulative share, reaching 80% at customer "
           f"{stats['needed_for_80']}.",
           "Top panel: revenue per customer, largest first. Bottom panel: running share of total revenue.")}
-  <h3>Concentration summary</h3>
+  <h4>Concentration summary</h4>
   {table(conc_view, {}, numeric=["Value"])}
-  <h3>Top {len(top_cust)} customers</h3>
+  <h4>Top {len(top_cust)} customers</h4>
   {table(cust_view, {"Rank": integer, "Orders": integer, "Revenue": money, "Share": pct,
                      "Cumulative share": pct, "Last order": day},
          numeric=["Rank", "Orders", "Revenue", "Share", "Cumulative share"])}
-  {suspect_note}
+  {suspect_note}"""
+
+    finding = (
+        f'<p class="answer">The top three customers, {top3_list}, bring in {pct(top3_share)} of '
+        f"revenue between them, more than the other {len(rest_of_top10)} customers in the top 10 "
+        f"combined ({pct(rest_of_top10['Share'].sum())}). The top 10 bring in "
+        f"{pct(stats['top_10_share'])}, and {stats['needed_for_80']} of "
+        f"{stats['n_customers_ordering']} ordering customers make up 80%.</p>"
+    ) if top3_share > rest_of_top10["Share"].sum() else (
+        f'<p class="answer">The top three customers, {top3_list}, bring in {pct(top3_share)} of '
+        f"revenue between them. The top 10 bring in {pct(stats['top_10_share'])}, and "
+        f"{stats['needed_for_80']} of {stats['n_customers_ordering']} ordering customers make up 80%.</p>"
+    )
+
+    actions = [
+        f"<strong>Treat {top3_list} as key accounts.</strong> Give each a named account manager, "
+        f"review their orders monthly and agree supply and pricing terms that make them less likely "
+        f"to leave. Losing any one of them would cost about {pct(top3['Share'].min())}–"
+        f"{pct(top3['Share'].max())} of revenue.",
+        f"<strong>Reduce the dependence by growing the next tier.</strong> Customers ranked 4 to "
+        f"{stats['needed_for_80']} each bring in at most {money(top_cust['Revenue'].iloc[3])}. Target "
+        f"them with promotions and sales visits, and track the top-three share (now {pct(top3_share)}) "
+        f"each quarter as the measure of progress.",
+    ]
+    if len(lapsing):
+        names = ", ".join(f"{html.escape(c)} (last order {day(d)})"
+                          for c, d in zip(lapsing["Customer"], lapsing["LastOrder"]))
+        actions.append(
+            f"<strong>Call top customers who have gone quiet.</strong> {names} "
+            f"{'has' if len(lapsing) == 1 else 'have'} not ordered in over {lapse_days} days before "
+            f"the end of the data."
+        )
+    if stats["n_customers_no_orders"]:
+        actions.append(
+            f"<strong>Follow up on registered customers who never ordered.</strong> "
+            f"{stats['n_customers_no_orders']} customers in the database have no orders at all."
+        )
+    if suspect["order_ids"]:
+        actions.append(
+            f"<strong>Correct the customer on {len(suspect['order_ids'])} orders</strong> whose "
+            f"shipping details point elsewhere, so account reviews use accurate figures."
+        )
+
+    return f"""
+<section id="customers">
+  <h2>3. How dependent are we on a few customers?</h2>
+  {part("Why it matters", why)}
+  {part("Approach", approach)}
+  {part("Chart and tables", evidence)}
+  {part("Main finding", finding)}
+  {part("Business implication", bullets(actions))}
 </section>"""
 
 
@@ -287,7 +491,14 @@ body { margin:0; background:var(--bg); color:var(--fg);
 main { max-width: 920px; margin: 0 auto; padding: 32px 16px 64px; }
 h1 { font-size: 1.8rem; margin: 0 0 4px; }
 h2 { font-size: 1.35rem; margin: 48px 0 8px; padding-top: 16px; border-top: 1px solid var(--line); }
-h3 { font-size: 1rem; margin: 24px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.part { margin: 20px 0; }
+.part h3 { font-size: .8rem; margin: 0 0 6px; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; }
+.part p { margin: 0 0 10px; }
+.part ol { margin: 0; padding-left: 22px; }
+.part li { margin-bottom: 8px; }
+h4 { font-size: .95rem; margin: 20px 0 8px; color: var(--muted); }
+.repo { font-size: .9rem; margin: 8px 0 12px; }
+.repo a, nav a { color: var(--accent); }
 .sub, .note { color: var(--muted); }
 .note { font-size: .9rem; }
 .answer { font-size: 1.05rem; border-left: 3px solid var(--accent); padding-left: 12px; }
@@ -343,10 +554,11 @@ def build_page():
   <p class="sub">{integer(cov['n_orders'])} orders ({integer(cov['n_lines'])} order lines) placed between
   {day(cov['first_order'])} and {day(cov['last_order'])}, totalling {money(lines['Revenue'].sum())}
   in net revenue.</p>
+  <p class="repo">Code and data: <a href="{REPO_URL}">{REPO_URL.removeprefix("https://")}</a></p>
   <nav><a href="#growth">Growth</a><a href="#products">Products</a><a href="#customers">Customers</a></nav>
-  {section_growth(monthly, yoy)}
+  {section_growth(monthly, yoy, cov)}
   {section_products(cats, prods)}
-  {section_customers(conc, stats, cust.head(10), suspect)}
+  {section_customers(conc, stats, cust.head(10), suspect, cov['last_order'])}
   <footer>
     <p>Revenue = unit price on the order line × quantity × (1 − discount), using the price actually
     charged rather than today's list price. Orders are dated by order date; {cov['n_unshipped']}

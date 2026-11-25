@@ -66,7 +66,10 @@ byte for byte.
 ## Where each table and chart comes from
 
 All functions are in `scripts/`. Each page section is assembled by the
-`section_*` function shown in its heading below, in `build_site.py`.
+`section_*` function shown in its heading below, in `build_site.py`. Every
+section has five labelled parts: Why it matters, Approach, the chart and/or
+tables, Main finding, and Business implication. The finding and implication
+text is generated from the computed results, so it updates with the data.
 
 **Page header** (order count, date range, total revenue): `analysis.data_coverage`
 and the `Revenue` column from `analysis.build_order_lines`.

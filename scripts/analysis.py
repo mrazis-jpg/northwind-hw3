@@ -67,16 +67,20 @@ def data_coverage(tables):
 
     Returns:
         dict[str, Any]: ``first_order`` and ``last_order``
-        (pandas.Timestamp), ``n_orders`` and ``n_lines`` (int), and
-        ``n_unshipped`` (int, orders with no ``ShippedDate``).
+        (pandas.Timestamp), ``n_orders`` and ``n_lines`` (int),
+        ``n_unshipped`` (int, orders with no ``ShippedDate``) and
+        ``oldest_unshipped`` (pandas.Timestamp, order date of the
+        oldest of those; NaT if every order shipped).
     """
     orders = tables["Orders"]
+    unshipped = orders["ShippedDate"].isna()
     return {
         "first_order": orders["OrderDate"].min(),
         "last_order": orders["OrderDate"].max(),
         "n_orders": len(orders),
         "n_lines": len(tables["Orders Details"]),
-        "n_unshipped": int(orders["ShippedDate"].isna().sum()),
+        "n_unshipped": int(unshipped.sum()),
+        "oldest_unshipped": orders.loc[unshipped, "OrderDate"].min(),
     }
 
 
@@ -123,8 +127,9 @@ def year_over_year(monthly):
 
     Returns:
         pandas.DataFrame: One row per year with a prior year to compare:
-        ``Months`` (label), ``PriorRevenue``, ``CurrentRevenue``,
-        ``PriorOrders``, ``CurrentOrders`` and ``Growth`` (fraction).
+        ``Months`` (label), ``MonthCount``, ``PriorRevenue``,
+        ``CurrentRevenue``, ``PriorOrders``, ``CurrentOrders`` and
+        ``Growth`` (fraction).
     """
     full = monthly[~monthly["Partial"]].copy()
     full["Year"] = full.index.year
@@ -143,6 +148,7 @@ def year_over_year(monthly):
         current_rev = current.loc[common, "Revenue"].sum()
         rows.append({
             "Months": f"{first}–{last} {year} vs {year - 1}",
+            "MonthCount": len(common),
             "PriorRevenue": prior_rev,
             "CurrentRevenue": current_rev,
             "PriorOrders": prior.loc[common, "Orders"].sum(),
