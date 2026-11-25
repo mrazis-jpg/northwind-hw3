@@ -278,7 +278,6 @@ def section_products(cats, prods):
     """
     top_cat = cats.iloc[0]
     top_two_share = cats["Share"].head(2).sum()
-    bottom_two = cats.tail(2)
     n_top = len(prods)
     top_share = prods["CumulativeShare"].iloc[-1]
     leader = prods.iloc[0]
@@ -340,12 +339,6 @@ def section_products(cats, prods):
             f"replacement products in {html.escape(disc_cats)} and move their customers over before "
             f"remaining stock sells out."
         )
-    actions.append(
-        f"<strong>Review the weakest categories.</strong> {html.escape(' and '.join(bottom_two['Category']))} "
-        f"together make up only {pct(bottom_two['Share'].sum())} of revenue. Decide whether to promote "
-        f"them or trim their range and free up stock and supplier effort for "
-        f"{html.escape(top_cat['Category'])}."
-    )
 
     return f"""
 <section id="products">
@@ -397,7 +390,8 @@ def section_customers(conc, stats, top_cust, suspect, data_end, lapse_days=90):
             f'<p class="note">Data caveat: {len(suspect["order_ids"])} orders ({ids}) ship to a different '
             f"company and country than the customer recorded on them, so their customer ID may be wrong. "
             f"They are counted under the recorded customer; together they are {money(suspect['revenue'])} "
-            f"({pct(suspect['share'])} of revenue){impact}.</p>"
+            f"({pct(suspect['share'])} of revenue){impact}. The customer on these orders should be "
+            f"corrected so account reviews use accurate figures.</p>"
         )
 
     why = ("<p>When a few customers supply most of the revenue, losing one of them can wipe out a "
@@ -455,16 +449,6 @@ def section_customers(conc, stats, top_cust, suspect, data_end, lapse_days=90):
             f"<strong>Call top customers who have gone quiet.</strong> {names} "
             f"{'has' if len(lapsing) == 1 else 'have'} not ordered in over {lapse_days} days before "
             f"the end of the data."
-        )
-    if stats["n_customers_no_orders"]:
-        actions.append(
-            f"<strong>Follow up on registered customers who never ordered.</strong> "
-            f"{stats['n_customers_no_orders']} customers in the database have no orders at all."
-        )
-    if suspect["order_ids"]:
-        actions.append(
-            f"<strong>Correct the customer on {len(suspect['order_ids'])} orders</strong> whose "
-            f"shipping details point elsewhere, so account reviews use accurate figures."
         )
 
     return f"""
